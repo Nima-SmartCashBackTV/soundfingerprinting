@@ -26,3 +26,6 @@ _site/
 .sass-cache/
 Gemfile.lock
 global.json
+*.wav
+*.csv
+*.ts
