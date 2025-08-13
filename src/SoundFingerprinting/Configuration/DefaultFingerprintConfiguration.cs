@@ -16,7 +16,7 @@ namespace SoundFingerprinting.Configuration
             SpectrogramConfig = new DefaultSpectrogramConfig();
             HashingConfig = new DefaultHashingConfig();
             TopWavelets = 200;
-            SampleRate = 5512;
+            SampleRate = 5512;  //5512;
             HaarWaveletNorm = Math.Sqrt(2);
             OriginalPointSaveTransform =  _ => Array.Empty<byte>();
             FrameNormalizationTransform = new LogSpectrumNormalization();
