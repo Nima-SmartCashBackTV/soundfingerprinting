@@ -19,10 +19,10 @@ internal class Program
        Project-root-relative folders
     -------------------------------------------------------------- */
     private static string AdsDir =>
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "data", "ads");
+        "C:/small_data/ads";
 
     private static string AudioDir =>
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "data", "audio");
+        "C:/small_data/audio";
 
     /* --------------------------------------------------------------
        Initialise FFmpeg once and return the decoder
