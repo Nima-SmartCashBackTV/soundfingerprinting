@@ -1,0 +1,10 @@
+{
+  "name": ".NET Launch (AdDetector)",
+  "type": "coreclr",
+  "request": "launch",
+  "preLaunchTask": "build",
+  "program": "${workspaceFolder:AdDetector}/bin/Debug/net9.0/AdDetector.dll",
+  "cwd": "${workspaceFolder:AdDetector}",
+  "console": "integratedTerminal",
+  "justMyCode": false
+}
