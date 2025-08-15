@@ -1,4 +1,8 @@
-﻿// using System;
+﻿//in csproject:     
+// <PackageReference Include="LibVLCSharp" Version="*" />
+// <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.*" />
+
+// using System;
 // using System.IO;
 // using System.Linq;
 // using System.Threading.Tasks;
