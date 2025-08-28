@@ -19,7 +19,7 @@
 //        Project-root-relative folders
 //     -------------------------------------------------------------- */
 //     private static string AdsDir =>
-//         "C:/small_data/ads";
+//         "C:/small_data/ads_video";
 
 //     private static string AudioDir =>
 //         "C:/small_data/audio";
