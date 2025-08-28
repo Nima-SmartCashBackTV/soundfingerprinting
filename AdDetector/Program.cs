@@ -10,7 +10,9 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.InMemory;
 using SoundFingerprinting.Query;        // AVQueryResult, ResultEntry
 using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;  // dynamic loader
-using SoundFingerprinting.Strides;   
+using SoundFingerprinting.Strides;
+using SoundFingerprinting.Media;
+using System.Text.Json;
 
 internal class Program
 {
@@ -19,17 +21,17 @@ internal class Program
        Project-root-relative folders
     -------------------------------------------------------------- */
     private static string AdsDir =>
-        "C:/small_data/ads";
+        "C:/small_data/ads_video";
 
-    private static string AudioDir =>
-        "C:/small_data/audio";
+    private static string VideoDir =>
+        "C:/small_data/videos";
 
     /* --------------------------------------------------------------
        Initialise FFmpeg once and return the decoder
     -------------------------------------------------------------- */
-    private static readonly IAudioService audio = InitFFmpeg();
+    private static readonly IMediaService mediaService = InitFFmpeg();
 
-    private static IAudioService InitFFmpeg()
+    private static IMediaService InitFFmpeg()
     {
         string ffmpegPath = Path.Combine(AppContext.BaseDirectory, "FFmpeg",
                                          "bin",
@@ -47,31 +49,34 @@ internal class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         await IndexAdsAsync();
-        await ScanAudioAsync();
+        await ScanVideoAsync();
     }
 
     private static async Task IndexAdsAsync()
     {
-        int secondsToAnalyze = 2; // number of seconds to analyze from query file
-        int startAtSecond = 0; // start at the begining
+        double secondsToAnalyze = 9; // number of seconds to analyze from query file
+        double startAtSecond = 1; // start at the begining
         foreach (var file in Directory.GetFiles(AdsDir, "*.*",
                                                 SearchOption.AllDirectories))
         {
-            var track = new TrackInfo(Guid.NewGuid().ToString(),
-                                      Path.GetFileNameWithoutExtension(file),
-                                      "Ad");
+            var track = new TrackInfo(
+                Guid.NewGuid().ToString(),
+                Path.GetFileNameWithoutExtension(file),
+                "Ad",
+                // MediaType.Audio | MediaType.Video // Fix: set both audio and video
+                MediaType.Video
+            );
 
-        
             var hashes = await FingerprintCommandBuilder.Instance
                 .BuildFingerprintCommand()
-                .From(file, secondsToAnalyze, startAtSecond)
-                .WithFingerprintConfig(config =>
-                {
-                    config.Audio.SampleRate = 5512; // Set directly if available
-                    config.Audio.Stride = new IncrementalStaticStride(64);
-                    return config;
-                })
-                .UsingServices(audio)
+                .From(file, secondsToAnalyze, startAtSecond, MediaType.Video)
+                // .WithFingerprintConfig(config =>
+                // {
+                //     // config.Video.FrameRate = 30; // Set directly if available
+                //     // config.Video.Stride = new IncrementalStaticStride(64);
+                //     return config;
+                // })
+                .UsingServices(mediaService)
                 .Hash();
 
             model.Insert(track, hashes);
@@ -85,22 +90,22 @@ internal class Program
         Console.WriteLine($"✓ {model.GetTrackIds().Count()} ad(s) ready.\n");
     }
 
-    private static async Task ScanAudioAsync()
+    private static async Task ScanVideoAsync()
     {
         Console.WriteLine("→ Scanning content …");
         // int secondsToAnalyze = 1000; // number of seconds to analyze from query file
         // int startAtSecond = 0; // start at the begining
-        foreach (var file in Directory.GetFiles(AudioDir, "*.*",
+        foreach (var file in Directory.GetFiles(VideoDir, "*.*",
                                                 SearchOption.AllDirectories))
         {
             AVQueryResult queryResult = await QueryCommandBuilder.Instance
                                           .BuildQueryCommand()
                                         //   .From(file, secondsToAnalyze, startAtSecond)
-                                          .From(file)
-                                          .UsingServices(model, audio)
+                                          .From(file, MediaType.Video)
+                                          .UsingServices(model, mediaService)
                                           .Query();
 
-            var hits = queryResult.Audio?.ResultEntries ?? Enumerable.Empty<ResultEntry>();
+            var hits = queryResult.Video?.ResultEntries ?? Enumerable.Empty<ResultEntry>();
 
             foreach (var hit in hits.Where(h => h.Confidence >= 0.20))
             {
