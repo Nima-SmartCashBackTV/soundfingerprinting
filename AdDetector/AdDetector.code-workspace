@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../src/SoundFingerprinting"
+		},
+		{
+			"path": "../../../../../../../small_data"
+		}
+	],
+	"settings": {}
+}
