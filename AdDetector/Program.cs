@@ -54,8 +54,8 @@ internal class Program
 
     private static async Task IndexAdsAsync()
     {
-        double secondsToAnalyze = 9; // number of seconds to analyze from query file
-        double startAtSecond = 1; // start at the begining
+        double secondsToAnalyze = 2; // number of seconds to analyze from query file
+        double startAtSecond = 0; // start at the begining
         foreach (var file in Directory.GetFiles(AdsDir, "*.*",
                                                 SearchOption.AllDirectories))
         {
@@ -63,13 +63,13 @@ internal class Program
                 Guid.NewGuid().ToString(),
                 Path.GetFileNameWithoutExtension(file),
                 "Ad",
-                // MediaType.Audio | MediaType.Video // Fix: set both audio and video
-                MediaType.Video
+                MediaType.Audio | MediaType.Video // Fix: set both audio and video
+                // MediaType.Video
             );
 
             var hashes = await FingerprintCommandBuilder.Instance
                 .BuildFingerprintCommand()
-                .From(file, secondsToAnalyze, startAtSecond, MediaType.Video)
+                .From(file, secondsToAnalyze, startAtSecond, MediaType.Audio | MediaType.Video)
                 // .WithFingerprintConfig(config =>
                 // {
                 //     // config.Video.FrameRate = 30; // Set directly if available
@@ -98,16 +98,22 @@ internal class Program
         foreach (var file in Directory.GetFiles(VideoDir, "*.*",
                                                 SearchOption.AllDirectories))
         {
+            Console.WriteLine($"→ Scanning {Path.GetFileName(file)}");
             AVQueryResult queryResult = await QueryCommandBuilder.Instance
                                           .BuildQueryCommand()
                                         //   .From(file, secondsToAnalyze, startAtSecond)
-                                          .From(file, MediaType.Video)
+                                          .From(file, MediaType.Audio | MediaType.Video)
                                           .UsingServices(model, mediaService)
                                           .Query();
 
-            var hits = queryResult.Video?.ResultEntries ?? Enumerable.Empty<ResultEntry>();
-
-            foreach (var hit in hits.Where(h => h.Confidence >= 0.20))
+            var videoHits = queryResult.Video?.ResultEntries ?? Enumerable.Empty<ResultEntry>();
+            var audioHits = queryResult.Audio?.ResultEntries ?? Enumerable.Empty<ResultEntry>();
+            foreach (var hit in audioHits.Where(h => h.Confidence >= 0.20))
+            {
+                TimeSpan when = TimeSpan.FromSeconds(hit.QueryMatchStartsAt);
+                Console.WriteLine($"{Path.GetFileName(file)}  →  {hit.Track.Title} @ {when}");
+            }
+            foreach (var hit in videoHits.Where(h => h.Confidence >= 0.20))
             {
                 TimeSpan when = TimeSpan.FromSeconds(hit.QueryMatchStartsAt);
                 Console.WriteLine($"{Path.GetFileName(file)}  →  {hit.Track.Title} @ {when}");
